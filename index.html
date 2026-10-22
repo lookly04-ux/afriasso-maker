@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;overflow-x:auto;background:#10261a;color:#d8f3d0;paddin
 <div class="card"><h2>5. Mode d'organisation</h2><div class="seg"><label><input type="radio" name="mode" value="unique" checked>Branche unique</label><label><input type="radio" name="mode" value="multi">Multi-branches</label></div></div>
 <div class="acts"><button class="btn" id="go">Voir la Maquette</button><button class="btn s" id="sv">Enregistrer le projet</button><button class="btn a" id="ex">Télécharger / Exporter la Maquette</button></div>
 <p class="mu">La maquette est vierge de faux membres. Firebase et GitHub sont ajoutés plus tard, si le client le demande.</p></div>
-<p class="mu" style="text-align:center">AfriAsso Maker · Kaw Ly · Ensemble pour des associations plus fortes · v2.6 (accès sécurisé, hors ligne)</p>
+<p class="mu" style="text-align:center">AfriAsso Maker · Kaw Ly · Ensemble pour des associations plus fortes · v3.0 (accès sécurisé, hors ligne)</p>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script id="appjs">
@@ -183,6 +183,7 @@ Aucune donnée pré-remplie.|No pre-filled data.|لا توجد بيانات مس
 Données financières protégées : accès réservé au bureau.|Protected financial data: board access only.|بيانات مالية محمية: للمكتب فقط.
 Aucune branche.|No branches.|لا توجد فروع.
 Aide|Help|مساعدة
+Accès|Access|الوصول
 À propos|About|حول
 Guide de démarrage|Getting started|دليل البدء
 Coordonnées|Contact details|بيانات الاتصال
@@ -234,7 +235,7 @@ function launch(c,d,cb){cfg=c;D=d;save=cb;saved=JSON.stringify(d);role=ROLES[0];
  lang=d.lang||c.lang||"fr";$("#lg").value=lang;$("#lg").onchange=e=>{lang=e.target.value;D.lang=lang;nav();render()};$("#role").onchange=e=>{role=e.target.value;nav();render()};
  $("#sc").onclick=saveCopy;$("#back").onclick=()=>a.classList.remove("on");if(window.PRESET)$("#back").style.display="none";
  a.classList.add("on");nav();render()}
-function nav(){const t=[["dash","Accueil"],...(cfg.mode==="multi"?[["br","Branches"]]:[]),["mem","Membres"],["caisse","Caisse"],["rap","Rapports"],["bur","Bureau"],["doc","Documents"],["apropos","À propos"],["sec","Sécurité"],["aide","Aide"]];
+function nav(){const t=[["dash","Accueil"],...(cfg.mode==="multi"?[["br","Branches"]]:[]),["mem","Membres"],["caisse","Caisse"],["rap","Rapports"],["bur","Bureau"],["doc","Documents"],["apropos","À propos"],...(window.ACC&&(role==="Président"||role==="Administrateur")?[["acces","Accès"]]:[]),["sec","Sécurité"],["aide","Aide"]];
  $("#nav").innerHTML=t.filter(x=>!cfg.mods||cfg.mods[x[0]]!==false).map(x=>`<button data-t="${x[0]}" class="${x[0]===tab?"on":""}">${x[1]}</button>`).join("");
  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;eB=eM=eT=null;nav();render()})}
 const RO='<div class="ro">Lecture seule pour le rôle « <b>${role}</b> ».</div>';
@@ -284,6 +285,7 @@ function render0(){const m=$("#main");if(save)try{save(cfg,D)}catch(e){}ind();
    m.querySelectorAll("[data-te]").forEach(b=>b.onclick=()=>{eT=b.dataset.te;render();m.scrollTop=0});
    m.querySelectorAll("[data-ta]").forEach(b=>b.onclick=()=>{if(confirm("Annuler cette opération ? Le solde sera recalculé automatiquement.")){const t=T(b.dataset.ta);t.annule=true;t.annuleLe=today();render()}});
    m.querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>{delete T(b.dataset.tr).annule;render()})}}
+ if(tab==="acces"){m.innerHTML='<div class="card empty">Chargement…</div>';if(window.ACC)ACC.render(m)}
  if(tab==="aide"){m.innerHTML=`<div class="card"><h2>Guide de démarrage</h2>${G[lang].map((g,i)=>`<details${i?"":" open"} style="padding:8px 0;border-bottom:1px solid var(--bd)"><summary><b>${i+1}. ${g[0]}</b></summary><p class="mu">${g[1]}</p></details>`).join("")}</div>`}
  if(tab==="apropos"){const a=D.about||{};
   m.innerHTML=`<div class="card" style="text-align:center">${cfg.logo?`<img src="${cfg.logo}" alt="" style="width:96px;height:96px;object-fit:contain;border-radius:16px">`:""}<h2 style="margin-top:8px">${flag()} ${esc(cfg.name)}</h2><p class="mu">${esc(cfg.sigle||"")}</p><p>${esc(cfg.desc||"")}</p></div><div class="card"><h2>Coordonnées</h2>${[["Mission",a.mission],["Date de création",a.creation],["Adresse",a.adresse],["E-mail",a.email],["Téléphone",a.tel],["Site web",a.site]].map(x=>x[1]?`<div class="item"><span class="mu">${x[0]}</span><span>${esc(x[1])}</span></div>`:"").join("")||'<div class="empty">Aucune information renseignée.</div>'}</div>`+(can("bur")?`<div class="card"><h2>Modifier les informations</h2><form id="f"><label>Mission</label><textarea name="mi" rows="2">${esc(a.mission||"")}</textarea><div class="row"><div><label>Date de création</label><input name="cr" type="date" value="${esc(a.creation||"")}"></div><div><label>Téléphone</label><input name="tl" value="${esc(a.tel||"")}"></div></div><label>Adresse</label><input name="ad" value="${esc(a.adresse||"")}"><div class="row"><div><label>E-mail</label><input name="em" type="email" value="${esc(a.email||"")}"></div><div><label>Site web</label><input name="sw" value="${esc(a.site||"")}"></div></div><br><button class="btn">Enregistrer</button></form></div>`:"");
@@ -360,7 +362,7 @@ list();
 }
 </script><script id="fbjs">
 (()=>{
-if(window.PRESET)return;if(!window.firebase){const g=$("#gt");if(g)g.innerHTML="Le service de connexion sécurisé n'a pas pu se charger.<br>Si vous êtes hors ligne, ouvrez l’outil une première fois avec internet : ensuite il fonctionnera sans connexion. Sinon, rechargez la page.";return}
+if(window.PRESET||/[?&]asso=/.test(location.search))return;if(!window.firebase){const g=$("#gt");if(g)g.innerHTML="Le service de connexion sécurisé n'a pas pu se charger.<br>Si vous êtes hors ligne, ouvrez l’outil une première fois avec internet : ensuite il fonctionnera sans connexion. Sinon, rechargez la page.";return}
 firebase.initializeApp({apiKey:"AIzaSyAoexKlZtHWlYfZTus3hTetX92H40hBxok",authDomain:"afriasso-maker.firebaseapp.com",projectId:"afriasso-maker",storageBucket:"afriasso-maker.firebasestorage.app",messagingSenderId:"938592328308",appId:"1:938592328308:web:8f61518792908864d08f21"});
 const auth=firebase.auth(),db=firebase.firestore(),TS=firebase.firestore.FieldValue,fb=window.fb={user:null,admin:false,gen:{},pend:{},filter:"all"},T={};
 db.settings({experimentalAutoDetectLongPolling:true,merge:true});
@@ -404,7 +406,7 @@ async function adm(){s3.innerHTML='<div class="card empty">Chargement…</div>';
   s3.querySelectorAll("[data-i]").forEach(b=>b.onclick=async()=>{const g=A.find(x=>x.id===b.dataset.i),r=prompt("Rôle du responsable à inviter (Président, Secrétaire, Trésorier) :","Secrétaire");if(!r)return;const c=code();try{await db.collection("assos").doc(g.id).collection("invites").doc(c).set({role:r,used:false,createdAt:TS.serverTimestamp()});fb.inv.unshift(mk(g.id,g.assoc,r,c));adm()}catch(e){alert("Invitation impossible : "+e.message)}});
   s3.querySelectorAll("[data-z]").forEach(b=>b.onclick=()=>{const s=AS[b.dataset.z]==="suspendu"?"actif":"suspendu";if(confirm(s==="suspendu"?"Suspendre cette association ? Ses responsables n’y auront plus accès.":"Réactiver cette association ?"))up("assos",b.dataset.z,{status:s})});
   s3.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{const t=msg(fb.inv[+b.dataset.c]);try{navigator.clipboard.writeText(t);b.textContent="Copié ✓"}catch(e){prompt("Copiez ce message :",t)}});
-  s3.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>open("https://wa.me/?text="+encodeURIComponent(msg(fb.inv[+b.dataset.w]))));s3.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const g=A.find(x=>x.id===b.dataset.del);if(!confirm("Supprimer définitivement « "+g.assoc+" » ("+g.email+") ?\n\nCela supprime la demande, l’espace en ligne avec ses invitations, et le projet du collaborateur. Action irréversible."))return;try{for(const sc of ["invites","members"]){const q=await db.collection("assos").doc(g.id).collection(sc).get();for(const d of q.docs)await d.ref.delete()}await db.collection("assos").doc(g.id).delete();if(g.uid)await db.collection("admins").doc(g.uid).collection("projects").doc(g.id).delete();await db.collection("generations").doc(g.id).delete();toast("Supprimé ✓","ok");adm()}catch(e){alert("Suppression impossible : "+e.message+"\n\nSi le message parle de permissions, publiez la dernière version des règles Firestore.")}})
+  s3.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>open("https://wa.me/?text="+encodeURIComponent(msg(fb.inv[+b.dataset.w]))));s3.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const g=A.find(x=>x.id===b.dataset.del);if(!confirm("Supprimer définitivement « "+g.assoc+" » ("+g.email+") ?\n\nCela supprime la demande, l’espace en ligne avec ses invitations, et le projet du collaborateur. Action irréversible."))return;try{for(const sc of ["invites","team","data","photos"]){const q=await db.collection("assos").doc(g.id).collection(sc).get();for(const d of q.docs)await d.ref.delete()}await db.collection("assos").doc(g.id).delete();if(g.uid)await db.collection("admins").doc(g.uid).collection("projects").doc(g.id).delete();await db.collection("generations").doc(g.id).delete();toast("Supprimé ✓","ok");adm()}catch(e){alert("Suppression impossible : "+e.message+"\n\nSi le message parle de permissions, publiez la dernière version des règles Firestore.")}})
  }catch(e){s3.innerHTML='<div class="card empty">Lecture impossible : '+esc(e.message)+'</div>'}}
 let unsub=null;
 auth.onAuthStateChanged(async u=>{fb.user=u;fb.admin=false;fb.gen={};fb.ready=null;if(unsub){unsub();unsub=null}
@@ -419,7 +421,67 @@ auth.onAuthStateChanged(async u=>{fb.user=u;fb.admin=false;fb.gen={};fb.ready=nu
  col().get().then(s=>{const L=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.upd||"")>(a.upd||"")?1:-1),loc=G.get();
   let fs=false;try{fs=localStorage.getItem("afriasso_sync_"+u.uid)==="1"}catch(x){}const PL=(!L.length&&loc.length&&!fs)?loc:L;try{localStorage.setItem("afriasso_sync_"+u.uid,"1")}catch(x){}if(PL===loc){loc.forEach(cloudSave);G.set(loc)}else G.set(L);if(!fb.admin&&fb.ready)fb.ready.then(()=>PL.forEach(p=>{if(!fb.gen[p.id]&&p.cfg)recordGen(p)}))}).catch(e=>toast("Projets en ligne non chargés : "+(e.code||e.message),"wait"))});
 })();
-</script><style id="tutcss">#tv{position:fixed;inset:0;z-index:70;background:radial-gradient(circle at 20% 10%,#0b6b2e,#06371a 70%);color:#fff;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+</script><script id="assojs">
+(()=>{
+const mt=location.search.match(/[?&]asso=([^&#]+)/);if(!mt||window.PRESET)return;
+const AID=decodeURIComponent(mt[1]),Q=s=>document.querySelector(s);
+if(!window.firebase){const t=Q("#gt");if(t)t.innerHTML="Le service sécurisé n’a pas pu se charger.<br>Si vous êtes hors ligne, ouvrez ce lien une première fois avec internet.";return}
+firebase.initializeApp({apiKey:"AIzaSyAoexKlZtHWlYfZTus3hTetX92H40hBxok",authDomain:"afriasso-maker.firebaseapp.com",projectId:"afriasso-maker",storageBucket:"afriasso-maker.firebasestorage.app",messagingSenderId:"938592328308",appId:"1:938592328308:web:8f61518792908864d08f21"});
+const auth=firebase.auth(),db=firebase.firestore(),TS=firebase.firestore.FieldValue;
+db.settings({experimentalAutoDetectLongPolling:true,merge:true});db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+Q("#gen").style.display="none";
+const base=db.collection("assos").doc(AID),dc=base.collection("data"),ph=base.collection("photos");
+let tt=null;const toast=(m,k)=>{let d=document.getElementById("fbt");if(!d){d=document.createElement("div");d.id="fbt";d.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:90;padding:10px 14px;border-radius:12px;font:600 13px system-ui,sans-serif;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3)";document.body.appendChild(d)}d.textContent=m;d.style.background=k==="ok"?"#198754":k==="err"?"#c0392b":"#f58a1f";d.style.color=k==="wait"?"#2b1a00":"#fff";d.style.display="block";clearTimeout(tt);tt=setTimeout(()=>{d.style.display="none"},k==="err"?10000:2500)};
+const ov=h=>{const d=document.createElement("div");d.style.cssText="position:fixed;inset:0;z-index:50;background:linear-gradient(180deg,#e7f4e2,#fff8ee);display:flex;align-items:center;justify-content:center;padding:16px";d.innerHTML=h;document.body.appendChild(d);return d};
+const L=ov('<div class="card" style="max-width:380px;width:100%"><h2 style="text-align:center">Accès à votre association</h2><form id="af"><label>E-mail</label><input name="e" type="email" required><label>Mot de passe</label><input name="p" type="password" minlength="6" required><label>Code d’invitation (première connexion)</label><input name="c" placeholder="XXXX-XXXX" autocapitalize="characters"><p id="ae" class="out" style="min-height:1.3em"></p><button class="btn" style="width:100%">Se connecter</button><p class="mu" style="text-align:center;margin-top:10px"><a href="#" id="asu">Créer mon compte (avec le code)</a> · <a href="#" id="afp">Mot de passe oublié</a></p></form></div>');
+const W=ov('<div class="card" id="wc" style="max-width:380px;width:100%;text-align:center"></div>');W.style.display="none";
+{const g=Q("#gate");if(g)g.style.display="none"}
+const E={"auth/invalid-credential":"E-mail ou mot de passe incorrect.","auth/wrong-password":"E-mail ou mot de passe incorrect.","auth/user-not-found":"E-mail ou mot de passe incorrect.","auth/email-already-in-use":"Ce compte existe déjà : connectez-vous.","auth/weak-password":"Mot de passe trop court (6 caractères minimum).","auth/network-request-failed":"Pas de connexion internet."};
+const say=e=>{Q("#ae").textContent=E[e.code]||e.message};
+let pending="";const f=Q("#af");
+f.onsubmit=e=>{e.preventDefault();Q("#ae").textContent="";pending=f.c.value.trim().toUpperCase();auth.signInWithEmailAndPassword(f.e.value,f.p.value).catch(say)};
+Q("#asu").onclick=e=>{e.preventDefault();pending=f.c.value.trim().toUpperCase();if(!pending||!f.e.value||f.p.value.length<6){Q("#ae").textContent="Saisissez e-mail, mot de passe (6 caractères min.) et code d’invitation.";return}auth.createUserWithEmailAndPassword(f.e.value,f.p.value).catch(say)};
+Q("#afp").onclick=e=>{e.preventDefault();if(!f.e.value){Q("#ae").textContent="Saisissez d’abord votre e-mail.";return}auth.sendPasswordResetEmail(f.e.value).then(()=>{Q("#ae").textContent="E-mail de réinitialisation envoyé."}).catch(say)};
+const wmsg=(t,m,x)=>{L.style.display="none";W.style.display="flex";Q("#wc").innerHTML="<h2>"+t+"</h2><p class='mu'>"+m+"</p>"+(x||"")+'<div class="acts"><button class="btn s" id="wlo">Se déconnecter</button></div>';Q("#wlo").onclick=()=>auth.signOut().then(()=>location.reload())};
+const cs=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);
+const code=()=>{const b=new Uint8Array(8);crypto.getRandomValues(b);return [...b].map(x=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x%32]).join("").replace(/(.{4})/,"$1-")};
+let R="",U=null,C=null,booted=false,Dm=null,tm=null;const last={},PH={},PHL={};
+const parts={core:{r:["Président"],get:()=>({branches:Dm.branches,bureau:Dm.bureau,histo:Dm.histo,about:Dm.about||{}})},people:{r:["Président","Secrétaire"],get:()=>({members:Dm.members.map(x=>({...x,p:x.p?1:0}))})},money:{r:["Trésorier"],get:()=>({tx:Dm.tx})},docs:{r:["Président","Secrétaire"],get:()=>({docs:Dm.docs})}};
+const can=k=>R==="Administrateur"||parts[k].r.includes(R);
+const attach=()=>{Dm.members.forEach(x=>{x.p=PH[x.id]||""})};
+const ap={core:o=>{Dm.branches=o.branches||[];Dm.bureau=o.bureau||[];Dm.histo=o.histo||[];Dm.about=o.about||{}},people:o=>{Dm.members=o.members||[];attach()},money:o=>{Dm.tx=o.tx||[]},docs:o=>{Dm.docs=o.docs||[]}};
+function flush(){if(!booted)return;Object.keys(parts).forEach(k=>{if(!can(k))return;const s=cs(parts[k].get());if(s===last[k])return;if(s.length>900000){toast("Données trop volumineuses pour « "+k+" » (limite 900 Ko).","err");return}last[k]=s;dc.doc(k).set(JSON.parse(s)).then(()=>toast("☁️ Enregistré","ok")).catch(e=>{last[k]="";toast("❌ Enregistrement refusé : "+(e.code||e.message),"err")})});
+ if(can("people")){Dm.members.forEach(x=>{const h=x.p?x.p.length:0;if((PHL[x.id]||0)!==h){PHL[x.id]=h;(x.p?ph.doc(x.id).set({p:x.p}):ph.doc(x.id).delete()).catch(()=>{PHL[x.id]=-1})}});Object.keys(PHL).forEach(id=>{if(!Dm.members.some(x=>x.id===id)){delete PHL[id];ph.doc(id).delete().catch(()=>{})}})}}
+const save=()=>{clearTimeout(tm);tm=setTimeout(flush,1200)};
+const err=e=>{if(e.code==="permission-denied")wmsg("Accès interrompu","Votre accès a été retiré ou l’association est suspendue. Contactez l’administrateur.");else toast("Synchronisation : "+(e.code||e.message),"wait")};
+async function enter(u){const rs=await db.collection("roles").doc(u.uid).get();let role=rs.exists?"Administrateur":null;
+ if(!role){const tr=base.collection("team").doc(u.uid);let t=await tr.get();
+  if(!t.exists){if(!pending){wmsg("Code d’invitation requis","Entrez le code reçu de votre administrateur ou de votre président.",'<input id="wcode" placeholder="XXXX-XXXX" style="text-align:center;margin:8px 0" autocapitalize="characters"><button class="btn" id="wgo" style="width:100%;margin-bottom:8px">Valider</button>');Q("#wgo").onclick=()=>{pending=Q("#wcode").value.trim().toUpperCase();W.style.display="none";enter(u).catch(e=>wmsg("Erreur",esc(e.message)))};return}
+   const iv=await base.collection("invites").doc(pending).get();if(!iv.exists||iv.data().used){pending="";wmsg("Code invalide","Ce code n’existe pas ou a déjà été utilisé. Demandez-en un nouveau.");return}
+   const bt=db.batch();bt.set(tr,{role:iv.data().role,email:u.email,code:pending,createdAt:TS.serverTimestamp()});bt.update(iv.ref,{used:true,usedBy:u.uid,usedAt:TS.serverTimestamp()});await bt.commit();t=await tr.get()}
+  role=t.data().role}
+ const a=await base.get();if(!a.exists)throw new Error("Association introuvable.");const A=a.data();
+ if(A.status!=="actif"){wmsg("Association suspendue","Contactez l’administrateur d’AfriAsso Maker.");return}
+ R=role;U=u;C={...(A.cfg||{}),name:A.name,sigle:A.sigle||"",country:A.country||"",mode:A.mode||"unique"};Dm=newD(C.mode);
+ try{const mf={name:A.name,short_name:(A.sigle||A.name).slice(0,12),start_url:location.pathname+location.search,scope:location.pathname,display:"standalone",background_color:"#f1f7ef",theme_color:C.c1||"#0b6b2e",icons:[{src:new URL("icon-192.png",location.href).href,sizes:"192x192",type:"image/png"},{src:new URL("icon-512.png",location.href).href,sizes:"512x512",type:"image/png"}]},l=document.querySelector('link[rel=manifest]');if(l)l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:"application/manifest+json"}))}catch(x){}
+ ph.onSnapshot(s=>{s.docChanges().forEach(ch=>{const id=ch.doc.id;if(ch.type==="removed"){delete PH[id];delete PHL[id]}else{PH[id]=ch.doc.data().p||"";PHL[id]=PH[id].length}});if(Dm){attach();if(booted)render()}},err);
+ dc.onSnapshot(s=>{if(!booted&&s.metadata.fromCache&&s.empty){toast("Première ouverture : connexion internet requise.","wait");return}
+  s.docChanges().forEach(ch=>{const k=ch.doc.id;if(!ap[k]||ch.type==="removed"||ch.doc.metadata.hasPendingWrites)return;const o=ch.doc.data(),st=cs(o);if(st===last[k])return;last[k]=st;ap[k](o)});
+  attach();if(!booted){booted=true;L.style.display="none";W.style.display="none";launch(C,Dm,save);role=R;Q("#role").style.display="none";Q("#sc").style.display="none";Q("#app .tag").textContent="EN LIGNE";Q("#back").textContent="Déconnexion";Q("#back").onclick=()=>auth.signOut().then(()=>location.reload());nav();render()}else render()},err)}
+auth.onAuthStateChanged(u=>{if(!u){L.style.display="flex";W.style.display="none";return}L.style.display="none";enter(u).catch(e=>wmsg("Erreur",esc(e.message)))});
+const msg=(r,c)=>"Bonjour, voici votre accès à l’application de "+C.name+" ("+r+") :\nLien : "+location.origin+location.pathname+"?asso="+AID+"\nCode d’invitation : "+c+"\nCe code est personnel et ne sert qu’une fois.";
+window.ACC={last:null,async render(m){try{const [t,iv]=await Promise.all([base.collection("team").get(),base.collection("invites").where("used","==",false).get()]);if(tab!=="acces")return;
+ const T=t.docs.map(d=>({id:d.id,...d.data()})),I=iv.docs.map(d=>({id:d.id,...d.data()})),l=ACC.last;
+ m.innerHTML=`<div class="card"><h2>Inviter un responsable</h2><label>Rôle</label><select id="ar">${["Secrétaire","Trésorier","Président","Membre"].map(x=>`<option>${x}</option>`).join("")}</select><br><br><button class="btn" id="ac">Créer un code d’invitation</button></div>`+(l?`<div class="card" style="border:2px solid #f58a1f"><h2>Code ${esc(l.r)} : <span style="letter-spacing:.08em">${l.c}</span></h2><div class="acts"><button class="btn sm" id="acp">Copier le message</button><button class="btn a sm" id="awa">WhatsApp</button></div><p class="mu">Ce code ne sert qu’une fois : envoyez-le uniquement à la personne concernée.</p></div>`:"")+`<div class="card"><h2>Équipe (${T.length})</h2>${T.map(x=>`<div class="item"><span><b>${esc(x.email||"")}</b><br><span class="mu">${esc(x.role)}</span></span>${x.id!==U.uid?`<button class="btn d sm" data-rt="${x.id}">Retirer</button>`:""}</div>`).join("")||'<div class="empty">Aucun membre.</div>'}</div><div class="card"><h2>Invitations en attente (${I.length})</h2>${I.map(x=>`<div class="item"><span><b>${x.id}</b><br><span class="mu">${esc(x.role)}</span></span><button class="btn d sm" data-ix="${x.id}">Annuler</button></div>`).join("")||'<div class="empty">Aucune invitation.</div>'}</div>`;
+ const re=()=>ACC.render(m);
+ Q("#ac").onclick=async()=>{const r=Q("#ar").value,c=code();try{await base.collection("invites").doc(c).set({role:r,used:false,createdAt:TS.serverTimestamp(),by:U.email});ACC.last={r,c};re()}catch(e){toast("❌ "+(e.code||e.message),"err")}};
+ if(l){Q("#acp").onclick=()=>{const x=msg(l.r,l.c);try{navigator.clipboard.writeText(x);Q("#acp").textContent="Copié ✓"}catch(e){prompt("Copiez ce message :",x)}};Q("#awa").onclick=()=>open("https://wa.me/?text="+encodeURIComponent(msg(l.r,l.c)))}
+ m.querySelectorAll("[data-rt]").forEach(b=>b.onclick=()=>{if(confirm("Retirer l’accès de ce responsable ?"))base.collection("team").doc(b.dataset.rt).delete().then(re).catch(e=>toast("❌ "+(e.code||e.message),"err"))});
+ m.querySelectorAll("[data-ix]").forEach(b=>b.onclick=()=>base.collection("invites").doc(b.dataset.ix).delete().then(re).catch(e=>toast("❌ "+(e.code||e.message),"err")))
+ }catch(e){if(tab==="acces")m.innerHTML='<div class="card empty">Lecture impossible : '+esc(e.message)+'</div>'}}};
+})();
+</script>
+<style id="tutcss">#tv{position:fixed;inset:0;z-index:70;background:radial-gradient(circle at 20% 10%,#0b6b2e,#06371a 70%);color:#fff;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 #tvh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;background:rgba(0,0,0,.35);font-size:14px}
 #tvh button,#tvc button{border:0;border-radius:99px;background:rgba(255,255,255,.18);color:#fff;font:inherit;font-size:18px;padding:8px 16px;cursor:pointer}
 #tvc .p{background:linear-gradient(135deg,#f58a1f,#fbb017);color:#2b1a00;font-weight:700}
